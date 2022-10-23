@@ -1,7 +1,7 @@
-byte gassPotPin = A0;
-byte brakePotPin = A1;
-byte directionBtnPin  = 0;
-byte motorA1Pin = 1;
+#include <SoftwareSerial.h>
+
+SoftwareSerial HC12(12, 13);
+byte motorA1Pin = 7;
 byte motorA2Pin = 2;
 byte motorB1Pin = 3;
 byte motorB2Pin = 4;
@@ -21,9 +21,9 @@ byte directionSwap = false;
 byte directionBtnReady = true;
 
 void setup() {
-  pinMode(gassPotPin, INPUT);
-  pinMode(brakePotPin, INPUT);
-  pinMode(directionBtnPin, INPUT);
+  Serial.begin(9600);
+  HC12.begin(9600);
+  
   pinMode(motorA1Pin, OUTPUT);
   pinMode(motorA2Pin, OUTPUT);
   pinMode(motorB1Pin, OUTPUT);
@@ -32,10 +32,17 @@ void setup() {
   pinMode(motorBSpeedControlPin, OUTPUT);
 }
 
+int gassPotValue;
 void loop() {
-  int gassPotValue = getMappedValue(gassPotPin);
-  int brakePotValue = getMappedValue(brakePotPin);
-  byte directionBtnPressed = digitalRead(directionBtnPin);
+  if (HC12.read() > 0) {
+    gassPotValue = HC12.read();
+  } else {
+    gassPotValue = 0; 
+  }
+  Serial.println(gassPotValue);
+  
+  int brakePotValue = 0;
+  byte directionBtnPressed = false;
 
   if (directionBtnPressed && directionBtnReady) {
     directionSwap = true;
@@ -136,10 +143,4 @@ void motorsBackward(int speedValue) {  //min 45
   digitalWrite(motorB1Pin, LOW);
   digitalWrite(motorB2Pin, HIGH);
   analogWrite(motorBSpeedControlPin, speedValue);
-}
-
-int getMappedValue(int pin) {
-  int value = analogRead(pin);
-  int mappedValue = map(value, 0, 1023, 0, 20);
-  return mappedValue;
 }
