@@ -14,18 +14,12 @@ void setup() {
 }
 
 void loop() {
-  int brakePotValue = map(analogRead(brakePotPin), 0, 1023, 0, 254);
-  int gassPotValue = map(analogRead(gassPotPin), 0, 1023, 0, 254);
+  int brakePotValue = map(analogRead(brakePotPin), 0, 1023, 0, 253);
+  int gassPotValue = map(analogRead(gassPotPin), 0, 1023, 0, 253);
   byte reverseBtnPushed = digitalRead(reverseBtnPin);
-  
-  int transmitterData[] = {brakePotValue, gassPotValue, reverseBtnPushed};
 
-  HC12.write(255);
-  for (int i = 0; i < 3; i++) {
-    Serial.print(transmitterData[i]);
-    Serial.print(':');
-    HC12.write(transmitterData[i]);
-  }
-  Serial.println();
+  String transmitterData = String(brakePotValue) + " " + String(gassPotValue) + " " + String(reverseBtnPushed) + '\n';
+  Serial.println(transmitterData);
+  HC12.print(transmitterData);
   delay(50);
 }

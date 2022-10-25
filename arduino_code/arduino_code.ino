@@ -19,6 +19,10 @@ long unsigned int slowingTime;
 byte directionForward = true;
 byte directionSwap = false;
 byte directionBtnReady = true;
+byte recievedValue;
+int brakePotValue;
+int gassPotValue;
+bool directionBtnPressed;
 
 void setup() {
   Serial.begin(9600);
@@ -32,90 +36,91 @@ void setup() {
   pinMode(motorBSpeedControlPin, OUTPUT);
 }
 
-int gassPotValue;
+
 void loop() {
   while (HC12.available()) {
-    Serial.println(HC12.read());
-  }
-
+    String transmitterData = HC12.readStringUntil('\n');
+    Serial.println(transmitterData);
+    
   /*
-  int gassPotValue = 0;
-  int brakePotValue = 0;
-  byte directionBtnPressed = false;
-
-  if (directionBtnPressed && directionBtnReady) {
-    directionSwap = true;
-    directionBtnReady = false;
-  }
-  if (!directionBtnPressed) {
-    directionBtnReady = true;
-  }  
-
-  if (!brakePotValue) {
-    braking = false;
-  }
-  if (!gassPotValue) {
-    accelerating = false;
-  }
-  if (gassPotValue || brakePotValue) {
-    slowing = false;
-  }
+    int gassPotValue = 0;
+    int brakePotValue = 0;
+    byte directionBtnPressed = false;
   
-  if (brakePotValue) {
-    if (!braking) {
-      brakingTime = millis();
-      braking = true;
+    if (directionBtnPressed && directionBtnReady) {
+      directionSwap = true;
+      directionBtnReady = false;
     }
-    if (millis() >= brakingTime && actualSpeed >= motorsLowSignal) {
-      actualSpeed -= brakePotValue;
-      brakingTime += 150;
-      if (actualSpeed < motorsLowSignal) {
-        actualSpeed = motorsLowSignal;
+    if (!directionBtnPressed) {
+      directionBtnReady = true;
+    }  
+  
+    if (!brakePotValue) {
+      braking = false;
+    }
+    if (!gassPotValue) {
+      accelerating = false;
+    }
+    if (gassPotValue || brakePotValue) {
+      slowing = false;
+    }
+    
+    if (brakePotValue) {
+      if (!braking) {
+        brakingTime = millis();
+        braking = true;
       }
-    }
-  } else if (gassPotValue) {
-    if (!accelerating) {
-      acceleratingTime = millis();
-      accelerating = true;
-    }
-    if (millis() >= acceleratingTime && actualSpeed <= 255) {
-      actualSpeed += gassPotValue;
-      acceleratingTime += 200;
-      if (actualSpeed > 255) {
-        actualSpeed = 255;
+      if (millis() >= brakingTime && actualSpeed >= motorsLowSignal) {
+        actualSpeed -= brakePotValue;
+        brakingTime += 150;
+        if (actualSpeed < motorsLowSignal) {
+          actualSpeed = motorsLowSignal;
+        }
       }
-    }
-  } else {
-      if (!slowing) {
-      slowingTime = millis();
-      slowing = true;
-    }
-    if (millis() >= slowingTime && actualSpeed >= motorsLowSignal) {
-      actualSpeed -= 1;
-      slowingTime += 40;
-      if (actualSpeed < motorsLowSignal) {
-        actualSpeed = motorsLowSignal;
+    } else if (gassPotValue) {
+      if (!accelerating) {
+        acceleratingTime = millis();
+        accelerating = true;
       }
-    }
-  }
-
-  if (actualSpeed <= motorsLowSignal) {
-    motorsStop();
-    if (directionSwap) {
-      if (directionForward) {
-        directionForward = false;
-      } else {
-        directionForward = true;
+      if (millis() >= acceleratingTime && actualSpeed <= 255) {
+        actualSpeed += gassPotValue;
+        acceleratingTime += 200;
+        if (actualSpeed > 255) {
+          actualSpeed = 255;
+        }
       }
-    }
-  } else {
-    if (directionForward) {
-      motorsForward(actualSpeed); 
     } else {
-      motorsBackward(actualSpeed);
+        if (!slowing) {
+        slowingTime = millis();
+        slowing = true;
+      }
+      if (millis() >= slowingTime && actualSpeed >= motorsLowSignal) {
+        actualSpeed -= 1;
+        slowingTime += 40;
+        if (actualSpeed < motorsLowSignal) {
+          actualSpeed = motorsLowSignal;
+        }
+      }
     }
-  }
+  
+    if (actualSpeed <= motorsLowSignal) {
+      motorsStop();
+      if (directionSwap) {
+        if (directionForward) {
+          directionForward = false;
+        } else {
+          directionForward = true;
+        }
+      }
+    } else {
+      if (directionForward) {
+        motorsForward(actualSpeed); 
+      } else {
+        motorsBackward(actualSpeed);
+      }
+    }
   */
+  }
 }
 
 void motorsForward(int speedValue) {  //min 45
