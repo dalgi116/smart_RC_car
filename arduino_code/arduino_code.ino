@@ -1,12 +1,12 @@
 #include <SoftwareSerial.h>
 
 SoftwareSerial HC12(12, 13);
-byte motorA1Pin = 7;
-byte motorA2Pin = 2;
-byte motorB1Pin = 3;
-byte motorB2Pin = 4;
-byte motorASpeedControlPin = 5;
-byte motorBSpeedControlPin = 6;
+const byte motorA1Pin = 7;
+const byte motorA2Pin = 2;
+const byte motorB1Pin = 3;
+const byte motorB2Pin = 4;
+const byte motorASpeedControlPin = 5;
+const byte motorBSpeedControlPin = 6;
 
 int motorsLowSignal = 45;
 int actualSpeed = 0;
@@ -34,13 +34,12 @@ void setup() {
 
 int gassPotValue;
 void loop() {
-  if (HC12.read() > 0) {
-    gassPotValue = HC12.read();
-  } else {
-    gassPotValue = 0; 
+  while (HC12.available()) {
+    Serial.println(HC12.read());
   }
-  Serial.println(gassPotValue);
-  
+
+  /*
+  int gassPotValue = 0;
   int brakePotValue = 0;
   byte directionBtnPressed = false;
 
@@ -116,6 +115,7 @@ void loop() {
       motorsBackward(actualSpeed);
     }
   }
+  */
 }
 
 void motorsForward(int speedValue) {  //min 45
