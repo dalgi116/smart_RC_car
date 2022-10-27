@@ -19,10 +19,6 @@ long unsigned int slowingTime;
 byte directionForward = true;
 byte directionSwap = false;
 byte directionBtnReady = true;
-byte recievedValue;
-int brakePotValue;
-int gassPotValue;
-bool directionBtnPressed;
 
 void setup() {
   Serial.begin(9600);
@@ -38,23 +34,38 @@ void setup() {
 
 
 void loop() {
-  while (HC12.available()) {
+  if (HC12.available()) {
     String transmitterData = HC12.readStringUntil('\n');
-    Serial.println(transmitterData);
+    String transmitterDataSplitted[2] = {};
+    int transmitterStringCounter = 0;
+    while (transmitterData.length() > 0) {
+      int spaceIndex = transmitterData.indexOf(' ');
+      if (spaceIndex == -1) {
+        transmitterDataSplitted[transmitterStringCounter++] = transmitterData;
+        break;
+      } else {
+        transmitterDataSplitted[transmitterStringCounter++] = transmitterData.substring(0, spaceIndex);
+        transmitterData = transmitterData.substring(spaceIndex + 1);
+      }
+    }
+    int brakePotValue = map(transmitterDataSplitted[0].toInt(), 0, 255, 0, 30);
+    int gassPotValue = map(transmitterDataSplitted[1].toInt(), 0, 255, 0, 30);
+    byte directionBtnPressed = transmitterDataSplitted[2].toInt();
     
-  /*
-    int gassPotValue = 0;
-    int brakePotValue = 0;
-    byte directionBtnPressed = false;
-  
+    Serial.print(brakePotValue);
+    Serial.print(' ');
+    Serial.print(gassPotValue);
+    Serial.print(' ');
+    Serial.print(directionBtnPressed);
+    Serial.println();
+    
     if (directionBtnPressed && directionBtnReady) {
       directionSwap = true;
       directionBtnReady = false;
     }
     if (!directionBtnPressed) {
       directionBtnReady = true;
-    }  
-  
+    } 
     if (!brakePotValue) {
       braking = false;
     }
@@ -64,7 +75,6 @@ void loop() {
     if (gassPotValue || brakePotValue) {
       slowing = false;
     }
-    
     if (brakePotValue) {
       if (!braking) {
         brakingTime = millis();
@@ -102,7 +112,6 @@ void loop() {
         }
       }
     }
-  
     if (actualSpeed <= motorsLowSignal) {
       motorsStop();
       if (directionSwap) {
@@ -119,9 +128,10 @@ void loop() {
         motorsBackward(actualSpeed);
       }
     }
-  */
   }
 }
+
+
 
 void motorsForward(int speedValue) {  //min 45
   digitalWrite(motorA1Pin, HIGH);
