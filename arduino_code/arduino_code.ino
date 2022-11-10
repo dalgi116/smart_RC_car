@@ -15,7 +15,7 @@ long unsigned int brakingTime;
 bool accelerating = false;
 long unsigned int acceleratingTime;
 bool slowing = false;
-long unsigned int slowingTime;
+long unsigned int slowingTime = millis();
 byte directionForward = true;
 byte directionSwap = false;
 byte directionBtnReady = true;
@@ -71,16 +71,18 @@ void loop() {
   }
   if (!directionBtnPressed) {
     directionBtnReady = true;
-  } 
+  }
   if (!brakePotValue) {
     braking = false;
   }
   if (!gassPotValue) {
     accelerating = false;
   }
+  /*
   if (gassPotValue || brakePotValue) {
     slowing = false;
   }
+  */
   if (brakePotValue) {
     if (!braking) {
       brakingTime = millis();
@@ -105,20 +107,13 @@ void loop() {
         actualSpeed = 255;
       }
     }
-  } else {
-      if (!slowing) {
-      slowingTime = millis();
-      slowing = true;
-    }
-    if (millis() >= slowingTime && actualSpeed >= motorsLowSignal) {
-      actualSpeed -= 1;
-      slowingTime += 40;
-      if (actualSpeed < motorsLowSignal) {
-        actualSpeed = motorsLowSignal;
-      }
-    }
+  }
+  if (millis() >= slowingTime) {
+    actualSpeed -= 1;
+    slowingTime += 100;
   }
   if (actualSpeed <= motorsLowSignal) {
+    actualSpeed = motorsLowSignal;
     motorsStop();
     if (directionSwap) {
       if (directionForward) {
