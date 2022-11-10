@@ -14,17 +14,15 @@ bool braking = false;
 long unsigned int brakingTime;
 bool accelerating = false;
 long unsigned int acceleratingTime;
-bool slowing = false;
 long unsigned int slowingTime = millis();
 byte directionForward = true;
-byte directionSwap = false;
 byte directionBtnReady = true;
 int brakePotValue;
 int gassPotValue;
 byte directionBtnPressed;
 
 void setup() {
-  //Serial.begin(9600);
+  Serial.begin(9600);
   HC12.begin(9600);
   
   pinMode(motorA1Pin, OUTPUT);
@@ -38,7 +36,6 @@ void setup() {
 
 void loop() {
   if (HC12.available()) {
-    //Serial.println("recieving_data");
     String transmitterData = HC12.readStringUntil('\n');
     String transmitterDataSplitted[2] = {};
     int transmitterStringCounter = 0;
@@ -55,20 +52,17 @@ void loop() {
     brakePotValue = map(transmitterDataSplitted[0].toInt(), 10, 255, 0, 30);
     gassPotValue = map(transmitterDataSplitted[1].toInt(), 10, 255, 0, 30);
     directionBtnPressed = transmitterDataSplitted[2].toInt();
-    /*
+    
     Serial.print(brakePotValue);
     Serial.print(' ');
     Serial.print(gassPotValue);
     Serial.print(' ');
     Serial.print(directionBtnPressed);
     Serial.println();
-    */
+    
   }
+
   
-  if (directionBtnPressed && directionBtnReady) {
-    directionSwap = true;
-    directionBtnReady = false;
-  }
   if (!directionBtnPressed) {
     directionBtnReady = true;
   }
@@ -78,49 +72,39 @@ void loop() {
   if (!gassPotValue) {
     accelerating = false;
   }
-  /*
-  if (gassPotValue || brakePotValue) {
-    slowing = false;
-  }
-  */
   if (brakePotValue) {
     if (!braking) {
       brakingTime = millis();
       braking = true;
     }
-    if (millis() >= brakingTime && actualSpeed >= motorsLowSignal) {
+    if (millis() >= brakingTime) {
       actualSpeed -= brakePotValue;
       brakingTime += 150;
-      if (actualSpeed < motorsLowSignal) {
-        actualSpeed = motorsLowSignal;
-      }
     }
   } else if (gassPotValue) {
     if (!accelerating) {
       acceleratingTime = millis();
       accelerating = true;
     }
-    if (millis() >= acceleratingTime && actualSpeed <= 255) {
+    if (millis() >= acceleratingTime) {
       actualSpeed += gassPotValue;
       acceleratingTime += 200;
-      if (actualSpeed > 255) {
-        actualSpeed = 255;
-      }
     }
   }
   if (millis() >= slowingTime) {
     actualSpeed -= 1;
     slowingTime += 100;
   }
-  if (actualSpeed <= motorsLowSignal) {
-    actualSpeed = motorsLowSignal;
+  actualSpeed = repairMotorSpeed(actualSpeed);
+  if (actualSpeed == motorsLowSignal) {
     motorsStop();
-    if (directionSwap) {
+    if (directionBtnPressed && directionBtnReady) {
       if (directionForward) {
         directionForward = false;
       } else {
         directionForward = true;
       }
+      directionBtnReady = false;
     }
   } else {
     if (directionForward) {
@@ -131,7 +115,14 @@ void loop() {
   }
 }
 
-
+int repairMotorSpeed(int actualSpeed) {
+  if (actualSpeed <= motorsLowSignal) {
+    actualSpeed = motorsLowSignal;
+  } else if (actualSpeed > 255) {
+    actualSpeed = 255;
+  }
+  return actualSpeed;
+}
 
 void motorsForward(int speedValue) {  //min 45
   digitalWrite(motorA1Pin, HIGH);
