@@ -14,8 +14,8 @@ void setup() {
 }
 
 void loop() {
-  int brakePotValue = map(analogRead(brakePotPin), 0, 1023, 0, 253);
-  int gassPotValue = map(analogRead(gassPotPin), 0, 1023, 0, 253);
+  int brakePotValue = map(analogRead(brakePotPin), 0, 1023, 10, 255);
+  int gassPotValue = map(analogRead(gassPotPin), 0, 1023, 10, 255);
   byte reverseBtnPushed = digitalRead(reverseBtnPin);
 
   String transmitterData = String(brakePotValue) + " " + String(gassPotValue) + " " + String(reverseBtnPushed) + '\n';

@@ -19,9 +19,12 @@ long unsigned int slowingTime;
 byte directionForward = true;
 byte directionSwap = false;
 byte directionBtnReady = true;
+int brakePotValue;
+int gassPotValue;
+byte directionBtnPressed;
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   HC12.begin(9600);
   
   pinMode(motorA1Pin, OUTPUT);
@@ -35,6 +38,7 @@ void setup() {
 
 void loop() {
   if (HC12.available()) {
+    //Serial.println("recieving_data");
     String transmitterData = HC12.readStringUntil('\n');
     String transmitterDataSplitted[2] = {};
     int transmitterStringCounter = 0;
@@ -48,85 +52,86 @@ void loop() {
         transmitterData = transmitterData.substring(spaceIndex + 1);
       }
     }
-    int brakePotValue = map(transmitterDataSplitted[0].toInt(), 0, 255, 0, 30);
-    int gassPotValue = map(transmitterDataSplitted[1].toInt(), 0, 255, 0, 30);
-    byte directionBtnPressed = transmitterDataSplitted[2].toInt();
-    
+    brakePotValue = map(transmitterDataSplitted[0].toInt(), 10, 255, 0, 30);
+    gassPotValue = map(transmitterDataSplitted[1].toInt(), 10, 255, 0, 30);
+    directionBtnPressed = transmitterDataSplitted[2].toInt();
+    /*
     Serial.print(brakePotValue);
     Serial.print(' ');
     Serial.print(gassPotValue);
     Serial.print(' ');
     Serial.print(directionBtnPressed);
     Serial.println();
-    
-    if (directionBtnPressed && directionBtnReady) {
-      directionSwap = true;
-      directionBtnReady = false;
+    */
+  }
+  
+  if (directionBtnPressed && directionBtnReady) {
+    directionSwap = true;
+    directionBtnReady = false;
+  }
+  if (!directionBtnPressed) {
+    directionBtnReady = true;
+  } 
+  if (!brakePotValue) {
+    braking = false;
+  }
+  if (!gassPotValue) {
+    accelerating = false;
+  }
+  if (gassPotValue || brakePotValue) {
+    slowing = false;
+  }
+  if (brakePotValue) {
+    if (!braking) {
+      brakingTime = millis();
+      braking = true;
     }
-    if (!directionBtnPressed) {
-      directionBtnReady = true;
-    } 
-    if (!brakePotValue) {
-      braking = false;
-    }
-    if (!gassPotValue) {
-      accelerating = false;
-    }
-    if (gassPotValue || brakePotValue) {
-      slowing = false;
-    }
-    if (brakePotValue) {
-      if (!braking) {
-        brakingTime = millis();
-        braking = true;
-      }
-      if (millis() >= brakingTime && actualSpeed >= motorsLowSignal) {
-        actualSpeed -= brakePotValue;
-        brakingTime += 150;
-        if (actualSpeed < motorsLowSignal) {
-          actualSpeed = motorsLowSignal;
-        }
-      }
-    } else if (gassPotValue) {
-      if (!accelerating) {
-        acceleratingTime = millis();
-        accelerating = true;
-      }
-      if (millis() >= acceleratingTime && actualSpeed <= 255) {
-        actualSpeed += gassPotValue;
-        acceleratingTime += 200;
-        if (actualSpeed > 255) {
-          actualSpeed = 255;
-        }
-      }
-    } else {
-        if (!slowing) {
-        slowingTime = millis();
-        slowing = true;
-      }
-      if (millis() >= slowingTime && actualSpeed >= motorsLowSignal) {
-        actualSpeed -= 1;
-        slowingTime += 40;
-        if (actualSpeed < motorsLowSignal) {
-          actualSpeed = motorsLowSignal;
-        }
+    if (millis() >= brakingTime && actualSpeed >= motorsLowSignal) {
+      actualSpeed -= brakePotValue;
+      brakingTime += 150;
+      if (actualSpeed < motorsLowSignal) {
+        actualSpeed = motorsLowSignal;
       }
     }
-    if (actualSpeed <= motorsLowSignal) {
-      motorsStop();
-      if (directionSwap) {
-        if (directionForward) {
-          directionForward = false;
-        } else {
-          directionForward = true;
-        }
+  } else if (gassPotValue) {
+    if (!accelerating) {
+      acceleratingTime = millis();
+      accelerating = true;
+    }
+    if (millis() >= acceleratingTime && actualSpeed <= 255) {
+      actualSpeed += gassPotValue;
+      acceleratingTime += 200;
+      if (actualSpeed > 255) {
+        actualSpeed = 255;
       }
-    } else {
+    }
+  } else {
+      if (!slowing) {
+      slowingTime = millis();
+      slowing = true;
+    }
+    if (millis() >= slowingTime && actualSpeed >= motorsLowSignal) {
+      actualSpeed -= 1;
+      slowingTime += 40;
+      if (actualSpeed < motorsLowSignal) {
+        actualSpeed = motorsLowSignal;
+      }
+    }
+  }
+  if (actualSpeed <= motorsLowSignal) {
+    motorsStop();
+    if (directionSwap) {
       if (directionForward) {
-        motorsForward(actualSpeed); 
+        directionForward = false;
       } else {
-        motorsBackward(actualSpeed);
+        directionForward = true;
       }
+    }
+  } else {
+    if (directionForward) {
+      motorsForward(actualSpeed); 
+    } else {
+      motorsBackward(actualSpeed);
     }
   }
 }
